@@ -1,12 +1,21 @@
 package com.vnun.habbit_api.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
+import jakarta.persistence.*;
+
+
+@Entity
 public class Habit {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
     private String name;
     private String description;
-    private List<String> completedDates;
+    @ElementCollection
+    private List<String> completedDates = new ArrayList<>();
 
     public long getId() {
         return id;

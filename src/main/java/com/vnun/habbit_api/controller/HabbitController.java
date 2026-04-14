@@ -1,9 +1,9 @@
 package com.vnun.habbit_api.controller;
 
 import com.vnun.habbit_api.model.Habit;
+import com.vnun.habbit_api.repository.HabitRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,42 +11,44 @@ import java.util.List;
 @RestController
 @RequestMapping("/habits")
 @CrossOrigin(origins = "*")
+
+
 public class HabbitController {
 
     private List<Habit> habits =  new ArrayList<>();
 
+    private final HabitRepository repository;
+
+    public HabbitController(HabitRepository repository) {
+        this.repository = repository;
+    }
+
 
     @GetMapping
     public List<Habit> getAllHabits() {
-        return habits;
+        return repository.findAll();
     }
 
     @PostMapping
-    public ResponseEntity<Habit> createHabit(@RequestBody Habit habit) {
-        habit.setId((long) (habits.size() + 1));
-        habits.add(habit);
-        return ResponseEntity.ok(habit);
+    public Habit createHabit(@RequestBody Habit habit) {
+        return repository.save(habit);
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteHabit(@PathVariable long id){
-        habits.removeIf(h -> h.getId() == id);
-        return ResponseEntity.ok().build();
+    public void deleteHabit(@PathVariable long id){
+        repository.deleteById(id);
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Habit> updateHabit(@PathVariable Long id, @RequestBody Habit updatedHabit) {
-        for (int i = 0; i < habits.size(); i++) {
-            Habit habit = habits.get(i);
-
-            if (habit.getId() == (id)) {
-                updatedHabit.setId(id);
-                habits.set(i, updatedHabit);
-                return ResponseEntity.ok(updatedHabit);
-            }
-        }
-
-        return ResponseEntity.notFound().build();
+    public Habit updateHabit(@PathVariable Long id, @RequestBody Habit updatedHabit) {
+        return repository.findById(id)
+                .map(habit -> {
+                    habit.setName(updatedHabit.getName());
+                    habit.setDescription(updatedHabit.getDescription());
+                    habit.setCompletedDates(updatedHabit.getCompletedDates());
+                    return repository.save(habit);
+                })
+                .orElseThrow(() -> new RuntimeException("Habit not found"));
     }
 
 }
